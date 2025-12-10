@@ -212,3 +212,139 @@ void menu() {
         }
     }
 }
+
+int menuLevel() {
+    timeout(-1);
+    erase();
+    refresh();
+
+    const int totalOpsi = totalLevel + 1;
+
+    struct koordinat { 
+        int y, x; 
+    };
+    koordinat opsi[totalOpsi];
+
+    int mulaiY = LINES / 2 - 1;
+    int mulaiX = (COLS - 29) / 2;
+
+    for (int i = 0; i < totalLevel; i++) {
+        int baris = mulaiY + (i >= 3 ? 2 : 0);
+        int kolom = (i < 3) ? mulaiX + (i % 3) * 12 : mulaiX + 6 + ((i - 3) % 2) * 12;
+        opsi[i] = { baris, kolom };
+    }
+
+    opsi[totalLevel] = { mulaiY + 4, mulaiX + 9 };
+
+    int pilihan = 0;
+
+    while (true) {
+        clear();
+
+        attron(COLOR_PAIR(4));
+        mvprintw(LINES / 2 - 5 / 2 - 2, (COLS - 11) / 2, "PILIH LEVEL");
+        attroff(COLOR_PAIR(4));
+
+        for (int i = 0; i < totalLevel; i++) {
+            if (i == pilihan) attron(A_REVERSE | COLOR_PAIR(7));
+            else attron(COLOR_PAIR(6));
+
+            mvprintw(opsi[i].y, opsi[i].x, 
+                     i < levelMaksTersedia ? "Level %d" : "Locked", i + 1);
+
+            attroff(A_REVERSE | COLOR_PAIR(7));
+            attroff(COLOR_PAIR(6));
+        }
+
+        if (pilihan == totalLevel) attron(A_REVERSE | COLOR_PAIR(7));
+        else attron(COLOR_PAIR(6));
+        mvprintw(opsi[totalLevel].y, opsi[totalLevel].x, "Keluar Game");
+        attroff(A_REVERSE | COLOR_PAIR(7));
+        attroff(COLOR_PAIR(6));
+
+        refresh();
+
+        int ch = getch();
+        int best, minDist;
+
+        switch (ch) {
+            case KEY_UP:
+                best = pilihan;
+                minDist = LINES;
+                for (int i = 0; i < totalOpsi; i++) {
+                    if (opsi[i].y < opsi[pilihan].y) {
+                        int dist = abs(opsi[i].y - opsi[pilihan].y) + abs(opsi[i].x - opsi[pilihan].x);
+                        if (dist < minDist) { best = i; minDist = dist; }
+                    }
+                }
+                pilihan = best;
+                break;
+
+            case KEY_DOWN:
+                best = pilihan;
+                minDist = LINES;
+                for (int i = 0; i < totalOpsi; i++) {
+                    if (opsi[i].y > opsi[pilihan].y) {
+                        int dist = abs(opsi[i].y - opsi[pilihan].y) + abs(opsi[i].x - opsi[pilihan].x);
+                        if (dist < minDist) { best = i; minDist = dist; }
+                    }
+                }
+                pilihan = best;
+                break;
+
+            case KEY_LEFT:
+                best = pilihan;
+                minDist = COLS;
+                for (int i = 0; i < totalOpsi; i++) {
+                    if (opsi[i].y == opsi[pilihan].y && opsi[i].x < opsi[pilihan].x) {
+                        int dist = opsi[pilihan].x - opsi[i].x;
+                        if (dist < minDist) { best = i; minDist = dist; }
+                    }
+                }
+                pilihan = best;
+                break;
+
+            case KEY_RIGHT:
+                best = pilihan;
+                minDist = COLS;
+                for (int i = 0; i < totalOpsi; i++) {
+                    if (opsi[i].y == opsi[pilihan].y && opsi[i].x > opsi[pilihan].x) {
+                        int dist = opsi[i].x - opsi[pilihan].x;
+                        if (dist < minDist) { best = i; minDist = dist; }
+                    }
+                }
+                pilihan = best;
+                break;
+
+            case '\n':
+                if (pilihan == totalLevel) return -1;
+                if (pilihan < levelMaksTersedia) return pilihan + 1;
+                break;
+        }
+    }
+}
+
+void lapangan(WINDOW *playwin) {
+    wclear(playwin);
+    
+    wattron(playwin, COLOR_PAIR(2));
+    box(playwin, 0, 0);
+
+    int lanes = 4, height = PLAY_H;
+
+    for (int i = 1; i <= lanes; ++i) {
+        int yy = i * (height / (lanes + 1));
+        for (int x = 1; x < PLAY_W - 1; ++x) 
+		mvwaddch(playwin, yy, x, '-');
+    }
+    for (int c = 1; c <= 2; ++c) {
+        int xx = c * (PLAY_W / 3);
+        for (int y = 1; y < PLAY_H - 1; ++y) 
+		mvwaddch(playwin, y, xx, '|');
+    }
+    for (int x = 1; x < PLAY_W - 1; ++x) 
+	mvwaddch(playwin, 1, x, FINISH);
+	wattroff(playwin, COLOR_PAIR(2));
+    
+    wrefresh(playwin);
+}
