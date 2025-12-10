@@ -407,3 +407,152 @@ void areaPermainan(WINDOW *playwin, Player &p1, Player &p2, Guard daftarPenjaga[
     
     wrefresh(playwin);
 }
+
+
+bool bermain(int level, Player &p1, Player &p2, int &waktuBermain) {
+ 	Guard daftarPenjaga[totalPenjaga];
+    int jumlahPenjaga;
+    PenjagaPerLevel(level, daftarPenjaga, jumlahPenjaga);
+
+    p1.x = 2; p1.y = PLAY_H-2; p1.status=0;
+    p2.x = PLAY_W-3; p2.y = PLAY_H-2; p2.status=0;
+
+    time_t start = time(NULL);
+    waktuBermain = 0;
+    
+    bool tertangkap = false;
+    bool finished = false;
+
+    int mulaiX = (COLS - PLAY_W) / 2;
+    int mulaiY = (LINES - PLAY_H) / 2;
+    
+    WINDOW *header  = newwin(4, COLS, 0, 0);
+    WINDOW *playwin = newwin(PLAY_H, PLAY_W, mulaiY, mulaiX);
+    
+    keypad(stdscr, TRUE);
+    timeout(0);
+    
+    while (true) {
+        int ch = getch();
+        if (ch != ERR) {
+            if (ch == KEY_UP && p1.y>0) p1.y--;
+            else if (ch == KEY_DOWN && p1.y<PLAY_H-2) p1.y++;
+            else if (ch == KEY_LEFT && p1.x>0) p1.x--;
+            else if (ch == KEY_RIGHT && p1.x<PLAY_W-2) p1.x++;
+            else if (ch=='w'||ch=='W') { if(p2.y>0) p2.y--; }
+            else if (ch=='s'||ch=='S') { if(p2.y<PLAY_H-2) p2.y++; }
+            else if (ch=='a'||ch=='A') { if(p2.x>0) p2.x--; }
+            else if (ch=='d'||ch=='D') { if(p2.x<PLAY_W-2) p2.x++; }
+            else if (ch=='q'||ch=='Q') {tertangkap=true; p1.status=1;p2.status=1; break;}
+        } 
+        
+        for (int i = 0; i < jumlahPenjaga; i++) {
+            daftarPenjaga[i].tick++;
+            if(daftarPenjaga[i].tick>=daftarPenjaga[i].speed){
+                daftarPenjaga[i].tick=0;
+                daftarPenjaga[i].x+=daftarPenjaga[i].dir;
+                if(daftarPenjaga[i].x<=0) daftarPenjaga[i].x=PLAY_W-3;
+                if(daftarPenjaga[i].x>=PLAY_W-2) daftarPenjaga[i].x=1;
+            }
+        }
+        
+        for(int i = 0; i < jumlahPenjaga; i++){
+            if(!daftarPenjaga[i].active) continue;
+            if(daftarPenjaga[i].x==p1.x && daftarPenjaga[i].y==p1.y) {
+			p1.status=1; 
+			tertangkap=true;
+        }
+			if(daftarPenjaga[i].x==p2.x && daftarPenjaga[i].y==p2.y){
+			p2.status=1;
+			tertangkap=true;
+        }
+    }
+    
+        if(p1.y<=0)p1.status=2;
+        if(p2.y<=0)p2.status=2;
+
+        waktuBermain = (int)difftime(time(NULL), start);
+        areaPermainan(playwin,p1,p2,daftarPenjaga,jumlahPenjaga);
+        mvprintw(mulaiY + PLAY_H, mulaiX, "Controls: ");
+        mvprintw(mulaiY + PLAY_H + 1, mulaiX,"P1 = Arrow keys  P2 = WASD");
+        mvprintw(mulaiY + PLAY_H + 2, mulaiX,"q to quit");
+	
+		werase(header);
+        mvwprintw(header, 1, 2, "Level %d", level);
+        mvwprintw(header, 2, 2, "P1: %s %s", p1.name, p1.status==0?"Bermain":p1.status==1?"Tertangkap":"Finish");
+        mvwprintw(header, 3, 2, "P2: %s %s", p2.name, p2.status==0?"Bermain":p2.status==1?"Tertangkap":"Finish");
+        mvwprintw(header, 1, COLS-20, "Waktu: %s", formatWaktu(waktuBermain).c_str());
+        wrefresh(header); 
+        
+        if(tertangkap) break;
+        if(p1.status==2 && p2.status==2) {finished=true; break;}
+        napms(TICK_MS);
+    }
+    
+    timeout(-1);
+        
+    werase(playwin);    
+    wrefresh(playwin);
+    delwin(playwin);
+    
+    werase(header);
+    wrefresh(header); 
+    delwin(header);
+
+
+    if(finished){
+        if(skorMain[level]==0 || waktuBermain<skorMain[level]){
+           skorMain[level]=waktuBermain;
+            simpanSkor(level, waktuBermain);
+        }
+        return true;
+    }
+    return false;
+}
+
+int main(){
+    Player p1, p2;
+    init_ncurses();  
+
+    opening();       
+    namaPlayer(p1, p2);  
+    informasi();     
+
+    while (true) {
+    	erase();
+        refresh();
+
+        menu(); 
+        timeout(-1);  
+        int level = menuLevel();  
+        timeout(0);    
+        if (level == -1) break;   
+
+        int durasiLevel;
+        bool menang = bermain(level, p1, p2, durasiLevel);
+        if (menang && level == levelMaksTersedia) {
+            levelMaksTersedia++;
+        if (levelMaksTersedia > totalLevel)
+            levelMaksTersedia = totalLevel;
+}
+
+        clear();
+        if (menang) {
+        	attron(COLOR_PAIR(3));
+            mvprintw(LINES / 2, (COLS - 21) / 2, "Selamat! Kamu Menang!");
+            mvprintw(LINES / 2 + 1, (COLS - 20) / 2, "Waktu bermain: %s", formatWaktu(durasiLevel).c_str());
+            attroff(COLOR_PAIR(3));
+        } else {
+        	attron(COLOR_PAIR(1));
+            mvprintw(LINES / 2, (COLS - 11) / 2, "Kamu Kalah!");
+            mvprintw(LINES / 2 + 1, (COLS - 20) / 2, "Waktu bermain: %s", formatWaktu(durasiLevel).c_str());
+            attroff(COLOR_PAIR(1));
+        }
+        timeout(-1);
+        while (getch() != '\n'); 
+        timeout(0);
+    }
+    
+    endwin();
+    return 0;
+}
