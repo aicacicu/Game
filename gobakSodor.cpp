@@ -408,7 +408,6 @@ void areaPermainan(WINDOW *playwin, Player &p1, Player &p2, Guard daftarPenjaga[
     wrefresh(playwin);
 }
 
-
 bool bermain(int level, Player &p1, Player &p2, int &waktuBermain) {
  	Guard daftarPenjaga[totalPenjaga];
     int jumlahPenjaga;
