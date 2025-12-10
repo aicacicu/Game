@@ -59,3 +59,70 @@ void init_ncurses() {
     init_pair(6, COLOR_CYAN, COLOR_BLACK);
     init_pair(7, COLOR_WHITE, COLOR_BLACK);
 }
+
+void opening() {
+	for (int i = 0; i< 5; i++) {
+        switch (i) { 
+            case 0: attron(COLOR_PAIR(7));
+			break;  
+            case 1: attron(COLOR_PAIR(3)); 
+			break; 
+            case 2: attron(COLOR_PAIR(1)); 
+			break;  
+            case 3: attron(COLOR_PAIR(4)); 
+			break; 
+            case 4: attron(COLOR_PAIR(6));
+			break; 
+        }
+        mvprintw(10, (COLS - 80) / 2, "  ____   ___   ____    ____   __  _       _____  ___   ___     ___   ____   ");
+        mvprintw(11, (COLS - 80) / 2, " /    | /   \\ |    \\  /    \\ |  |/ |     / ___/ /   \\ |   \\   /   \\ |    \\  ");
+        mvprintw(12, (COLS - 80) / 2, "|   __||     ||  O  )|  O   ||  ' /     /   \\_ |     ||    \\ |     ||  D  ) ");
+        mvprintw(13, (COLS - 80) / 2, "|  | _ |  O  ||    | |      ||    \\     \\__   ||  O  ||  D  ||  O  ||    /  ");
+        mvprintw(14, (COLS - 80) / 2, "|  |  ||     ||  O  )|  _   ||     |    /  \\  ||     ||     ||     ||    \\  ");
+        mvprintw(15, (COLS - 80) / 2, "|     ||     ||     ||  |   ||  .  |    \\     ||     ||    / |     ||  .  \\ ");
+        mvprintw(16, (COLS - 80) / 2, "|____.| \\___/ |_____||__|___||__|\\_|     \\____| \\___/ |___/   \\___/ |__|\\_| ");
+        attroff(COLOR_PAIR(7) | COLOR_PAIR(3) | COLOR_PAIR(1) | COLOR_PAIR(5) | COLOR_PAIR(4)); 
+        refresh();
+        Sleep(1000);
+    }  
+    int posisiY = 18; 
+    int posisiX = (COLS - 21) / 2; 
+    for (int i = 0; i <= 3; i++) {
+    	attron(COLOR_PAIR(6));
+        mvprintw(posisiY, posisiX, "-------------------");
+        mvprintw(posisiY + 1, posisiX, "[                 ]");
+        mvprintw(posisiY + 2, posisiX, "-------------------");
+        attroff(COLOR_PAIR(6));
+
+        for (int j = 0; j <= 15; j++) {
+        	attron(COLOR_PAIR(4));
+            mvprintw(posisiY + 1, posisiX + j + 1, ">");
+            attroff(COLOR_PAIR(4));
+            refresh();
+            Sleep(100); 
+        }
+    }
+    refresh();
+}
+
+void namaPlayer(Player &p1, Player &p2) {
+    echo();
+    curs_set(1);
+    timeout(-1);
+    clear();
+
+    char name1[31], name2[31];
+    mvprintw(10, (COLS - 19) / 2, "Masukkan Nama Pemain:");
+    mvprintw(13, 50, "Player 1 : ");
+    mvprintw(14, 50, "Player 2 : ");
+
+    mvgetnstr(13, 62, name1, 30);
+    mvgetnstr(14, 62, name2, 30);
+
+    strcpy(p1.name, strlen(name1) == 0 ? "Player1" : name1);
+    strcpy(p2.name, strlen(name2) == 0 ? "Player2" : name2);
+
+    noecho();
+    curs_set(0);
+    timeout(0);
+}
