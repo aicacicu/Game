@@ -348,3 +348,62 @@ void lapangan(WINDOW *playwin) {
     
     wrefresh(playwin);
 }
+
+void posisiPemain(int px, int py, int &sx, int &sy) {
+    sx = 1 + px;
+    sy = 1 + py;
+}
+
+void PenjagaPerLevel(int level, Guard daftarPenjaga[], int &jumlahPenjaga) {
+    jumlahPenjaga = 0;
+    
+    int jumlahLane = 2 + (level / 2);
+    if (jumlahLane > 5) jumlahLane = 5;
+    int jarakLane = (PLAY_H - 3) / (jumlahLane + 1);
+    if (jarakLane < 1) jarakLane = 1;
+    int placed = 0;
+
+    for (int lane = 0; lane < jumlahLane; lane++) {
+        int py = 1 + (lane + 1) * jarakLane;
+        int penjagaPerLane = 1 + (level / 2);
+        for (int g = 0; g < penjagaPerLane && placed < totalPenjaga; g++) {
+            daftarPenjaga[placed].y = py;
+            
+            int jarak = (PLAY_W - 4) / penjagaPerLane;
+            daftarPenjaga[placed].x = 1 + (g * jarak) % (PLAY_W - 2);
+            daftarPenjaga[placed].dir = ((lane + g) % 2 == 0) ? 1 : -1;
+            int base = 5 - (level / 2);
+            if (base < 1) base = 1;
+            daftarPenjaga[placed].speed = base;
+            daftarPenjaga[placed].tick = 0;
+            daftarPenjaga[placed].active = true;
+            placed++;
+        }
+    }
+    jumlahPenjaga = placed;
+}
+
+void areaPermainan(WINDOW *playwin, Player &p1, Player &p2, Guard daftarPenjaga[], int jumlahPenjaga) {
+    lapangan(playwin);
+    
+    for (int i = 0; i < jumlahPenjaga; i++) {
+        if (!daftarPenjaga[i].active) continue;
+        
+        int sx, sy;
+        posisiPemain(daftarPenjaga[i].x, daftarPenjaga[i].y, sx, sy);
+        wattron(playwin, COLOR_PAIR(1));
+        mvwaddch(playwin, sy, sx, GUARD);
+        wattroff(playwin, COLOR_PAIR(1));
+    }
+    
+    int sx1, sy1, sx2, sy2;
+    posisiPemain(p1.x, p1.y, sx1, sy1);
+    posisiPemain(p2.x, p2.y, sx2, sy2);
+    
+    wattron(playwin, COLOR_PAIR(3));
+    mvwaddch(playwin, sy1, sx1, P1);
+    mvwaddch(playwin, sy2, sx2, P2);
+    wattroff(playwin, COLOR_PAIR(3));
+    
+    wrefresh(playwin);
+}
