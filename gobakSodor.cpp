@@ -126,3 +126,89 @@ void namaPlayer(Player &p1, Player &p2) {
     curs_set(0);
     timeout(0);
 }
+
+void informasi() {
+    clear();
+    
+    mvprintw(5, (COLS - 62) / 2, "Gobak Sodor Digital ini adalah permainan tradisional Indonesia");
+    mvprintw(6, (COLS - 68) / 2, "yang dimainkan dengan cara melewati garis penjaga tanpa tertangkap.");
+    mvprintw(7, (COLS - 67) / 2, "Dua pemain harus bekerja sama untuk mencapai garis finish sambil");
+    mvprintw(8, (COLS - 49) / 2, "menghindari penjaga yang bergerak di dalam arena.");
+    mvprintw(10, (COLS - 55) / 2, "Pemain menang jika kedua pemain berhasil mencapai garis finish.");
+    mvprintw(11, (COLS - 73) / 2, "Jika salah satu pemain tertangkap, permainan berakhir dan dianggap kalah.");
+    mvprintw(12, (COLS - 68) / 2, "Gunakan kontrol gerak untuk menghindari penjaga dan terus bergerak");
+    mvprintw(13, (COLS - 35) / 2, "maju sampai mencapai akhir lapangan.");
+    mvprintw(15, 23, "Kontrol Pemain:");
+    mvprintw(17, 23, "Player 1 (O) : Panah atas (Maju), panah bawah (Mundur)");
+    mvprintw(18, 23, "           panah kiri (Kiri), panah kanan (Kanan)");
+    mvprintw(20, 23, "Player 2 (0) : W (Maju), A (Kiri), S (Mundur), D (Kanan)");
+    mvprintw(24, (COLS - 32) / 2, "Tekan ENTER untuk melanjutkan...");
+    refresh();
+    timeout(-1);
+    while (getch() != '\n') 
+    timeout(0);
+}
+
+void skor() {
+    ifstream file(fileSkor);
+    if (file) {
+        string baris;
+        mvprintw(0, (COLS - 23) / 2, "Waktu Bermain Per Level"); 
+        int y = 2;
+        while (getline(file, baris)) {
+            mvprintw(y++, (COLS - 18) / 2, "%s", baris.c_str());
+        }
+        file.close();
+        getch();
+    }
+}
+
+void simpanSkor(int level, double waktu) {
+    fstream file(fileSkor, ios::in | ios::out | ios::app);
+    if (file) {
+        file << "Level " << level << ": " << waktu << " second\n";
+        file.close();
+    }
+}
+
+void menu() {
+	timeout(-1);
+    erase();
+    refresh();
+	
+    int pilihan = 0;
+    const char* opsi[] = { "Mulai Bermain", "Lihat Skor", "Keluar" };
+    int jumlahOpsi = sizeof(opsi) / sizeof(opsi[0]);
+
+    while (true) {
+        erase();
+        attron(COLOR_PAIR(4));
+        mvprintw(LINES / 2 - 5, (COLS - 11) / 2, "GOBAK SODOR");
+        attroff(COLOR_PAIR(4));
+
+        for (int i = 0; i < jumlahOpsi; i++) {
+            int y = (LINES - jumlahOpsi) / 2 + i;               
+             int x = (COLS - strlen(opsi[i])) / 2;
+        	
+            if (i == pilihan) attron(A_REVERSE | COLOR_PAIR(7));
+            else attron(COLOR_PAIR(6));
+
+            mvprintw(y, x, opsi[i]);
+
+            attroff(A_REVERSE | COLOR_PAIR(7));
+            attroff(COLOR_PAIR(6));
+        }
+        refresh();
+
+        int ch = getch();
+        switch (ch) {
+            case KEY_UP: if (pilihan > 0) pilihan--; break;
+            case KEY_DOWN: if (pilihan < jumlahOpsi - 1) pilihan++; break;
+            case '\n':
+                if (pilihan == 0) return;
+                else if (pilihan == 1) { clear(); skor(); }
+                else if (pilihan == 2) { endwin(); exit(0); }
+                break;
+        }
+    }
+}
