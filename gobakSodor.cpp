@@ -9,7 +9,7 @@ using namespace std;
 
 const int MAP_H = 20;
 const int MAP_W = 40;
-const int totalPenjaga = 20;
+const int totalPenjaga = 12;
 const int totalLevel = 5;
 const char* fileSkor = "simpanSkor.txt"; 
 const char P1 = 'O';
@@ -38,7 +38,7 @@ struct Player {
 string formatWaktu(int seconds) {
     int mm = seconds / 60;
     int ss = seconds % 60;
-    char buf[16];
+    char buf[10];
     sprintf(buf,"%02d:%02d", mm, ss);
     return string(buf);
 }
@@ -483,7 +483,10 @@ bool bermain(int level, Player &p1, Player &p2, int &waktuBermain) {
         mvwprintw(header, 1, COLS-20, "Waktu: %s", formatWaktu(waktuBermain).c_str());
         wrefresh(header); 
         
-        if(tertangkap) break;
+        if(tertangkap){
+			Sleep(700);
+			break;
+		}
         if(p1.status==2 && p2.status==2) {finished=true; break;}
         napms(TICK_MS);
     }
